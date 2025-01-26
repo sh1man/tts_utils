@@ -1,0 +1,28 @@
+[project]
+name = "tts-utils"
+version = "0.1.0"
+description = "Утилиты для препроцессинга файлов"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "huggingface-hub>=0.27.1",
+    "numpy>=2.2.1",
+    "pydantic-settings>=2.7.1",
+    "razdel>=0.5.0",
+    "ruaccent>=1.5.8.3",
+    "transformers>=4.48.0",
+    "torch>=2.5.1",
+    "onnxruntime-gpu>=1.20.1",
+    "polars>=1.20.0",
+    "ruphon>=1.3",
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu124", marker = "platform_system != 'Darwin'"},
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
