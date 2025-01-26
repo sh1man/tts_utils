@@ -8,12 +8,13 @@ from config import settings
 
 
 def process_text(text):
-    cleaned = re.sub(r'\(.*?\)|<.*?>|["«»„“]|[\[\]]', '', text)
+    cleaned = re.sub(r'\(.*?\)|<.*?>|["«»„“•*]|[\[\]]', '', text)
     # Нормализация пробелов перед пунктуацией
     cleaned = re.sub(r'\s+([.,!?])', r'\1', cleaned)
+    cleaned = re.sub(r'/', 'или', cleaned)
     # Заменяет любые последовательности пробельных символов (даже очень длинные) на один обычный пробел
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-
+    cleaned = re.sub(r';.', '.', cleaned)
     # Разделяем на предложения
     sentences = [s.text for s in sentenize(cleaned)]
 
@@ -24,6 +25,9 @@ def process_text(text):
         if re.search(r'[A-Za-z]', sent):
             continue
 
+        # Пропускаем предложения с цифрой перед буквой (например: 1Свинец, 2Яшма)
+        if re.search(r'\d[А-Яа-я]', sent):
+            continue
         # Убираем лишние точки в начале
         sent = re.sub(r'^[.,]+', '', sent)
 
