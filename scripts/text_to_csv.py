@@ -8,10 +8,12 @@ from config import settings
 
 
 def process_text(text):
-    cleaned = re.sub(r'\(.*?\)|<.*?>|["«»„“•*]|[\[\]]', '', text)
+    cleaned = re.sub(r'\(.*?\)|<.*?>|["«»„“•*:]|[\[\]]|(\b\d+\.\s*)', '', text)
+    cleaned = re.sub(r'\b[А-ЯA-Z]\W+', '', cleaned, flags=re.IGNORECASE)
     # Нормализация пробелов перед пунктуацией
     cleaned = re.sub(r'\s+([.,!?])', r'\1', cleaned)
     cleaned = re.sub(r'/', 'или', cleaned)
+    cleaned = re.sub(r'№', 'номер', cleaned)
     # Заменяет любые последовательности пробельных символов (даже очень длинные) на один обычный пробел
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     cleaned = re.sub(r';.', '.', cleaned)
@@ -33,13 +35,18 @@ def process_text(text):
 
         # Фикс пробелов в конце
         sent = re.sub(r'\s+([.!?])$', r'\1', sent)
-        # Добавляем точку в конце предложения если отсутствует
-        if sent and not re.search(r'[.!?…]$', sent):
-            sent += '.'
-        # Капитализация первой буквы
-        if sent:
-            sent = sent[0].upper() + sent[1:]
-        processed.append(sent)
+        for item in sent.split('.'):
+            # Удаляем начальные небуквенные символы (кроме '-'), а также записи вида "А.", "М.,", "М.."
+            item = re.sub(r'^[^\w-]+|(?<!\w)[А-ЯA-Z]\W+', '', item, flags=re.IGNORECASE)
+            item = item.strip()
+            # Добавляем точку в конце предложения если отсутствует
+            if item and not re.search(r'[.!?…]$', item):
+                item += '.'
+            # Капитализация первой буквы
+            if item:
+                item = item[0].upper() + item[1:]
+
+            processed.append(item)
 
     return [s for s in processed if s]
 
