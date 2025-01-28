@@ -57,35 +57,38 @@ def main():
     print("Arzamas это ресурс с которого взяли инфу а конткекст данных у него культурно-исторические артефакты и их современные интерпретации")
     print("И назвали его ArzamasCAAC")
     sys.stdout.write("Введите название: ")
-    dataset_name = input()
+    dataset_name = input().strip()
+
     txt_files = list(Path(settings.text_to_csv.DATASET_PATH).glob('**/*.txt'))
     total_files = len(txt_files)
-    processed_files = 0
-    all_sentences = []
-    for txt_file in txt_files:
-        with open(txt_file, 'r', encoding='utf-8') as f:
-            text = f.read()
-            processed = process_text(text)
-            all_sentences.extend(processed)
 
-        # Обновляем прогресс
-        processed_files += 1
-        remaining = total_files - processed_files
-        progress = (processed_files / total_files) * 100 if total_files > 0 else 0
-
-        sys.stdout.write(
-            f"\rОбработано файлов: {processed_files}/{total_files} "
-            f"({progress:.2f}%) | Осталось: {remaining}"
-        )
-        sys.stdout.flush()
-
-        # Сохранение в текстовый файл
     output_path = Path(settings.text_to_csv.DATASET_PATH) / f"{dataset_name}.txt"
+    total_sentences = 0
 
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(all_sentences))
+    # Открываем файл для записи один раз перед циклом
+    with open(output_path, 'w', encoding='utf-8') as out_file:
+        for idx, txt_file in enumerate(txt_files, 1):
+            try:
+                with open(txt_file, 'r', encoding='utf-8') as in_file:
+                    text = in_file.read()
 
-    print(f"\nСохранено {len(all_sentences)} предложений в {output_path}")
+                # Обрабатываем и сразу записываем
+                for sentence in process_text(text):
+                    out_file.write(sentence + '\n')
+                    total_sentences += 1
+
+                # Обновление прогресса
+                progress = (idx / total_files) * 100
+                sys.stdout.write(
+                    f"\rОбработано: {idx}/{total_files} ({progress:.2f}%) | "
+                    f"Предложений: {total_sentences}"
+                )
+                sys.stdout.flush()
+
+            except Exception as e:
+                print(f"\nОшибка при обработке файла {txt_file}: {str(e)}")
+
+    print(f"\nИтог: сохранено {total_sentences} предложений в {output_path}")
 
 
 if __name__ == '__main__':
