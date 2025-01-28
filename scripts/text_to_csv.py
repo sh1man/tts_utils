@@ -8,7 +8,7 @@ from config import settings
 
 
 def process_text(text):
-    cleaned = re.sub(r'\(.*?\)|<.*?>|["«»„“•*:]|[\[\]]|(\b\d+\.\s*)', '', text)
+    cleaned = re.sub(r'\(.*?\)|<.*?>|["«»„“•*:$]|[\[\]]|(\b\d+\.\s*)', '', text)
     cleaned = re.sub(r'\b[А-ЯA-Z]\W+', '', cleaned, flags=re.IGNORECASE)
     # Нормализация пробелов перед пунктуацией
     cleaned = re.sub(r'\s+([.,!?])', r'\1', cleaned)
@@ -17,6 +17,7 @@ def process_text(text):
     # Заменяет любые последовательности пробельных символов (даже очень длинные) на один обычный пробел
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     cleaned = re.sub(r';.', '.', cleaned)
+    cleaned = re.sub(r'=', '.', cleaned)
     # Разделяем на предложения
     sentences = [s.text for s in sentenize(cleaned)]
 
@@ -52,7 +53,7 @@ def process_text(text):
 
 
 def main():
-    print("Введите название датасета (контекст данных+ресурс) например:")
+    print("Введите название датасета (ресурс+контекст данных) например:")
     print("Arzamas это ресурс с которого взяли инфу а конткекст данных у него культурно-исторические артефакты и их современные интерпретации")
     print("И назвали его ArzamasCAAC")
     sys.stdout.write("Введите название: ")
