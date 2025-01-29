@@ -2,8 +2,7 @@ import json
 import os
 from pathlib import Path
 
-
-from config import settings
+from config import get_config
 
 
 class Phonemizer:
@@ -49,8 +48,9 @@ class Phonemizer:
 
 
     def run(self):
-        dataset_path: Path = settings.text_to_json.DATASET_PATH
-        split_characters: int = settings.text_to_json.SPLIT_CHARACTERS
+        config = get_config()
+        dataset_path: Path = config.text_to_json.DATASET_PATH
+        split_characters: int = config.text_to_json.SPLIT_CHARACTERS
         print(dataset_path)
         for root, dirs, files in os.walk(dataset_path):
             for file_name in files:

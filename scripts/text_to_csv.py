@@ -1,10 +1,9 @@
 import re
 import sys
 from pathlib import Path
-
 from razdel import sentenize
 
-from config import settings
+from config import get_config
 from scripts.utils import MemoryBuffer
 
 
@@ -57,12 +56,14 @@ def main():
     print("Введите название датасета (ресурс+контекст данных) например:")
     print("Arzamas это ресурс с которого взяли инфу а конткекст данных у него культурно-исторические артефакты и их современные интерпретации")
     print("И назвали его ArzamasCAAC")
+
+    config = get_config()
     sys.stdout.write("Введите название: ")
     dataset_name = input().strip()
 
-    txt_files = list(Path(settings.text_to_csv.DATASET_PATH).glob('**/*.txt'))
+    txt_files = list(Path(config.text_to_csv.DATASET_PATH).glob('**/*.txt'))
     total_files = len(txt_files)
-    buffer = MemoryBuffer(max_size_gb=2)
+    buffer = MemoryBuffer(max_size_gb=config.buffer_max_size_gb)
     part_number = 1
     total_sentences = 0
 
@@ -74,7 +75,7 @@ def main():
             for sentence in process_text(text):
                 if not buffer.add(sentence):
                     # Записываем буфер в файл
-                    output_path = Path(settings.text_to_csv.DATASET_PATH) / f"{dataset_name}_part{part_number}.txt"
+                    output_path = Path(config.text_to_csv.DATASET_PATH) / f"{dataset_name}_part{part_number}.txt"
                     with open(output_path, 'w', encoding='utf-8') as f:
                         f.write('\n'.join(buffer.buffer))
 
@@ -87,9 +88,9 @@ def main():
             # Прогресс
             progress = (idx / total_files) * 100
             sys.stdout.write(
-                f"\rОбработано: {idx}/{total_files} ({progress:.2f}%) | "
+                f"\rОбработано файлов: {idx}/{total_files} ({progress:.2f}%) | "
                 f"Текущий буфер: {buffer.current_size / 1024 ** 3:.2f} ГБ | "
-                f"Частей: {part_number}"
+                f"Часть: {part_number}"
             )
             sys.stdout.flush()
 

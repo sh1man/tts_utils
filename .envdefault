@@ -1,1 +1,2 @@
 TEXT_TO_CSV__DATASET_PATH=F:/dataset/Taiga/Arzamas
+BUFFER_MAX_SIZE_GB=2

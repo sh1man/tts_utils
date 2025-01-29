@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent
 class TextToCsvConfig(BaseModel):
     DATASET_PATH: DirectoryPath
     SPLIT_CHARACTERS: int = 12500
+    BUFFER_MAX_SIZE_GB: float = 1
 
     @field_validator("DATASET_PATH")
     def check_path_exists(cls, v: Path) -> Path:
@@ -16,7 +17,7 @@ class TextToCsvConfig(BaseModel):
         return v
 
 
-class Settings(BaseSettings):
+class Config(BaseSettings):
     """Configuration for the application. Values can be set via environment variables.
 
     Pydantic will automatically handle mapping uppercased environment variables to the corresponding fields.
@@ -24,8 +25,9 @@ class Settings(BaseSettings):
     """  # noqa: E501
 
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_file=BASE_DIR / ".env")
-
+    buffer_max_size_gb: float
     text_to_csv: TextToCsvConfig
 
 
-settings = Settings()
+def get_config() -> Config:
+    return Config()
