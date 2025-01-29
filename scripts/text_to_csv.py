@@ -96,7 +96,7 @@ def main():
 
         # Запись остатка
         if buffer.current_size > 0:
-            output_path = Path(settings.text_to_csv.DATASET_PATH) / f"{dataset_name}_part{part_number}.txt"
+            output_path = Path(config.text_to_csv.DATASET_PATH) / f"{dataset_name}_part{part_number}.txt"
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(buffer.buffer))
 
