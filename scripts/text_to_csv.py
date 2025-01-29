@@ -5,6 +5,7 @@ from pathlib import Path
 from razdel import sentenize
 
 from config import settings
+from scripts.utils import MemoryBuffer
 
 
 def process_text(text):
@@ -61,34 +62,48 @@ def main():
 
     txt_files = list(Path(settings.text_to_csv.DATASET_PATH).glob('**/*.txt'))
     total_files = len(txt_files)
-
-    output_path = Path(settings.text_to_csv.DATASET_PATH) / f"{dataset_name}.txt"
+    buffer = MemoryBuffer(max_size_gb=2)
+    part_number = 1
     total_sentences = 0
 
-    # Открываем файл для записи один раз перед циклом
-    with open(output_path, 'w', encoding='utf-8') as out_file:
+    try:
         for idx, txt_file in enumerate(txt_files, 1):
-            try:
-                with open(txt_file, 'r', encoding='utf-8') as in_file:
-                    text = in_file.read()
+            with open(txt_file, 'r', encoding='utf-8') as f:
+                text = f.read()
 
-                # Обрабатываем и сразу записываем
-                for sentence in process_text(text):
-                    out_file.write(sentence + '\n')
-                    total_sentences += 1
+            for sentence in process_text(text):
+                if not buffer.add(sentence):
+                    # Записываем буфер в файл
+                    output_path = Path(settings.text_to_csv.DATASET_PATH) / f"{dataset_name}_part{part_number}.txt"
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        f.write('\n'.join(buffer.buffer))
 
-                # Обновление прогресса
-                progress = (idx / total_files) * 100
-                sys.stdout.write(
-                    f"\rОбработано: {idx}/{total_files} ({progress:.2f}%) | "
-                    f"Предложений: {total_sentences}"
-                )
-                sys.stdout.flush()
+                    part_number += 1
+                    buffer.clear()
+                    buffer.add(sentence)  # Добавляем текущее предложение в новый буфер
 
-            except Exception as e:
-                print(f"\nОшибка при обработке файла {txt_file}: {str(e)}")
+                total_sentences += 1
 
-    print(f"\nИтог: сохранено {total_sentences} предложений в {output_path}")
+            # Прогресс
+            progress = (idx / total_files) * 100
+            sys.stdout.write(
+                f"\rОбработано: {idx}/{total_files} ({progress:.2f}%) | "
+                f"Текущий буфер: {buffer.current_size / 1024 ** 3:.2f} ГБ | "
+                f"Частей: {part_number}"
+            )
+            sys.stdout.flush()
+
+        # Запись остатка
+        if buffer.current_size > 0:
+            output_path = Path(settings.text_to_csv.DATASET_PATH) / f"{dataset_name}_part{part_number}.txt"
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(buffer.buffer))
+
+    except MemoryError:
+        print("\nОШИБКА: Недостаточно памяти! Уменьшите размер буфера.")
+        sys.exit(1)
+
+    print(f"\nИтог: {total_sentences} предложений сохранено в {part_number} файлах")
 
 
 if __name__ == '__main__':
